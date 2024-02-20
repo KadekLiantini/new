@@ -151,17 +151,17 @@
 
 <?php
 if (isset($_POST['btn_submit'])) {
-    // Mengambil data dari formulir
-    $nama = $_POST['nama'];
-    $email = $_POST['email'];
-    $telp = $_POST['telp'];
-    $adult = $_POST['adult'];
-    $child = $_POST['child'];
-    $check_in = $_POST['check_in'];
-    $check_out = $_POST['check_out'];
-    $room_tipe = $_POST['room_tipe'];
-    $room_paket = $_POST['room_paket'];
-    $pesan = $_POST['pesan'];
+    // Mengambil data dari formulir dan membersihkannya
+    $nama = htmlspecialchars($_POST['nama']);
+    $email = htmlspecialchars($_POST['email']);
+    $telp = htmlspecialchars($_POST['telp']);
+    $adult = intval($_POST['adult']);
+    $child = intval($_POST['child']);
+    $check_in = htmlspecialchars($_POST['check_in']);
+    $check_out = htmlspecialchars($_POST['check_out']);
+    $room_tipe = htmlspecialchars($_POST['room_tipe']);
+    $room_paket = htmlspecialchars($_POST['room_paket']);
+    $pesan = htmlspecialchars($_POST['pesan']);
 
     // Koneksi ke MySQL (gantilah parameter sesuai dengan pengaturan server Anda)
     $servername = "localhost";
@@ -176,21 +176,21 @@ if (isset($_POST['btn_submit'])) {
         die("Koneksi gagal: " . $conn->connect_error);
     }
 
-    // Query SQL untuk menyimpan data ke dalam tabel
-    $sql = "INSERT INTO reservasi (nama, email, telp, adult, child, check_in, check_out, room_tipe, room_paket, pesan)
-            VALUES ('$nama', '$email', '$telp', '$adult', '$child', '$check_in', '$check_out', '$room_tipe', '$room_paket', '$pesan')";
+    // Gunakan prepared statements untuk mencegah SQL injection
+    $stmt = $conn->prepare("INSERT INTO reservasi (nama, email, telp, adult, child, check_in, check_out, room_tipe, room_paket, pesan) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssiisssss", $nama, $email, $telp, $adult, $child, $check_in, $check_out, $room_tipe, $room_paket, $pesan);
 
     // Eksekusi query
-    if ($conn->query($sql) === TRUE) {
+    if ($stmt->execute()) {
         echo "Data berhasil disimpan ke dalam basis data.";
     } else {
-        echo "Error: " . $sql . "<br>" . $conn->error;
+        echo "Error: " . $stmt->error;
     }
 
     // Tutup koneksi
+    $stmt->close();
     $conn->close();
 } else {
     echo "Formulir tidak dikirimkan.";
 }
 ?>
-
